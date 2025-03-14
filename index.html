@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Spherical Coordinate Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    /* Container for the image and marker overlay */
+    #imageContainer {
+      position: relative;
+      display: inline-block;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+    #uploadedImage {
+      display: block;
+      max-width: 100%;
+    }
+    /* Overlay to host markers */
+    #markerOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    /* Marker styling */
+    .marker {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: red;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    /* Output list styling */
+    #outputList {
+      margin-top: 20px;
+      list-style: none;
+      padding: 0;
+    }
+    #outputList li {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    #controls {
+      margin-top: 10px;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Interactive Spherical Coordinate Finder</h1>
+  <p>Upload an equirectangular image and click anywhere on it to calculate and mark the spherical coordinates (yaw and pitch).</p>
+  <input type="file" id="imageUpload" accept="image/*">
+
+  <!-- Image container: initially hidden until an image is loaded -->
+  <div id="imageContainer" style="display:none;">
+    <img id="uploadedImage" alt="Uploaded Image">
+    <div id="markerOverlay"></div>
+  </div>
+
+  <!-- Controls for clearing markers -->
+  <div id="controls" style="display:none;">
+    <button id="clearMarkers">Clear Markers</button>
+  </div>
+
+  <h2>Clicked Coordinates</h2>
+  <ul id="outputList"></ul>
+
+  <script>
+    // Get references to our DOM elements
+    const imageUpload = document.getElementById('imageUpload');
+    const imageContainer = document.getElementById('imageContainer');
+    const uploadedImage = document.getElementById('uploadedImage');
+    const markerOverlay = document.getElementById('markerOverlay');
+    const outputList = document.getElementById('outputList');
+    const clearMarkersBtn = document.getElementById('clearMarkers');
+
+    // When a file is selected, load it via FileReader and display the image
+    imageUpload.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        uploadedImage.src = e.target.result;
+        uploadedImage.onload = function() {
+          // Show the image container and update overlay size
+          imageContainer.style.display = 'inline-block';
+          markerOverlay.style.width = uploadedImage.clientWidth + 'px';
+          markerOverlay.style.height = uploadedImage.clientHeight + 'px';
+          document.getElementById('controls').style.display = 'block';
+          // Clear any previous markers/outputs
+          markerOverlay.innerHTML = '';
+          outputList.innerHTML = '';
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Create a marker element at given display coordinates
+    function createMarker(x, y) {
+      const marker = document.createElement('div');
+      marker.classList.add('marker');
+      marker.style.left = x + 'px';
+      marker.style.top = y + 'px';
+      markerOverlay.appendChild(marker);
+    }
+
+    // Given natural coordinates, compute spherical coordinates
+    function calculateCoordinates(xNatural, yNatural) {
+      const yaw = (xNatural / uploadedImage.naturalWidth) * 360 - 180;
+      const pitch = 90 - (yNatural / uploadedImage.naturalHeight) * 180;
+      return { yaw, pitch };
+    }
+
+    // Handle clicks on the image container
+    imageContainer.addEventListener('click', function(event) {
+      // Get container bounds and calculate click position relative to container
+      const rect = imageContainer.getBoundingClientRect();
+      const xDisplay = event.clientX - rect.left;
+      const yDisplay = event.clientY - rect.top;
+
+      // Compute scale factors between displayed size and natural image dimensions
+      const scaleX = uploadedImage.naturalWidth / uploadedImage.clientWidth;
+      const scaleY = uploadedImage.naturalHeight / uploadedImage.clientHeight;
+
+      // Determine the corresponding coordinates in the natural (original) image
+      const xNatural = xDisplay * scaleX;
+      const yNatural = yDisplay * scaleY;
+
+      // Calculate spherical coordinates (yaw and pitch)
+      const { yaw, pitch } = calculateCoordinates(xNatural, yNatural);
+
+      // Place a marker at the clicked location on the displayed image
+      createMarker(xDisplay, yDisplay);
+
+      // Append the coordinate details to the output list
+      const li = document.createElement('li');
+      li.innerHTML = `yaw = ${yaw.toFixed(2)}°, pitch = ${pitch.toFixed(2)}°`;
+      outputList.appendChild(li);
+    });
+
+    // Clear markers and coordinate outputs when "Clear Markers" is clicked
+    clearMarkersBtn.addEventListener('click', function() {
+      markerOverlay.innerHTML = '';
+      outputList.innerHTML = '';
+    });
+  </script>
+</body>
+</html>
