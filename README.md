@@ -2,9 +2,6 @@
 
 A modern, interactive web tool to calculate spherical coordinates (Pitch and Yaw) from equirectangular images.
 
-![Project Preview](https://github.com/Razee4315/pitch-and-yaw-finder/raw/main/preview.png)
-*(Note: Replace with an actual screenshot link after hosting or pushing to GitHub)*
-
 ## 🚀 Features
 
 -   **Interactive Interface**: Click anywhere on an uploaded equirectangular image to get precise coordinates.
