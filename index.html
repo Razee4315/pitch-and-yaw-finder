@@ -1,164 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Spherical Coordinate Finder</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    /* Container for the image and marker overlay */
-    #imageContainer {
-      position: relative;
-      display: inline-block;
-      border: 1px solid #ccc;
-      margin-top: 10px;
-    }
-    #uploadedImage {
-      display: block;
-      max-width: 100%;
-    }
-    /* Overlay to host markers */
-    #markerOverlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-    /* Marker styling */
-    .marker {
-      position: absolute;
-      width: 12px;
-      height: 12px;
-      background: red;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    /* Output list styling */
-    #outputList {
-      margin-top: 20px;
-      list-style: none;
-      padding: 0;
-    }
-    #outputList li {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    #controls {
-      margin-top: 10px;
-    }
-    button {
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pitch & Yaw Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <h1>Interactive Spherical Coordinate Finder</h1>
-  <p>Upload an equirectangular image and click anywhere on it to calculate and mark the spherical coordinates (yaw and pitch).</p>
-  <input type="file" id="imageUpload" accept="image/*">
 
-  <!-- Image container: initially hidden until an image is loaded -->
-  <div id="imageContainer" style="display:none;">
-    <img id="uploadedImage" alt="Uploaded Image">
-    <div id="markerOverlay"></div>
-  </div>
+  <header>
+    <div style="display: flex; align-items: baseline;">
+      <h1>Pitch & Yaw Finder</h1>
+      <span class="subtitle">Spherical Coordinate Tool</span>
+    </div>
+  </header>
 
-  <!-- Controls for clearing markers -->
-  <div id="controls" style="display:none;">
-    <button id="clearMarkers">Clear Markers</button>
-  </div>
+  <main>
+    <div id="workspace">
+      <!-- Upload Zone -->
+      <div id="uploadZone">
+        <div class="upload-content">
+          <div class="upload-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div class="upload-text">Drag & Drop your image here</div>
+          <div class="upload-subtext">Supports JPG, PNG, WEBP</div>
+          <button class="btn-primary" onclick="document.getElementById('imageUpload').click()">Browse Files</button>
+          <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+        </div>
+      </div>
 
-  <h2>Clicked Coordinates</h2>
-  <ul id="outputList"></ul>
+      <!-- Image Area -->
+      <div id="imageContainer">
+        <img id="uploadedImage" alt="Uploaded Equirectangular Image">
+        <div id="markerOverlay"></div>
+      </div>
+    </div>
 
-  <script>
-    // Get references to our DOM elements
-    const imageUpload = document.getElementById('imageUpload');
-    const imageContainer = document.getElementById('imageContainer');
-    const uploadedImage = document.getElementById('uploadedImage');
-    const markerOverlay = document.getElementById('markerOverlay');
-    const outputList = document.getElementById('outputList');
-    const clearMarkersBtn = document.getElementById('clearMarkers');
+    <aside>
+      <div class="sidebar-header">
+        <span class="sidebar-title">Coordinates</span>
+        <button id="clearMarkers">Clear All</button>
+      </div>
+      <ul id="outputList">
+        <!-- List items will go here -->
+        <li style="padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; font-style: italic;">
+          Click on the image to add points
+        </li>
+      </ul>
 
-    // When a file is selected, load it via FileReader and display the image
-    imageUpload.addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        uploadedImage.src = e.target.result;
-        uploadedImage.onload = function() {
-          // Show the image container and update overlay size
-          imageContainer.style.display = 'inline-block';
-          markerOverlay.style.width = uploadedImage.clientWidth + 'px';
-          markerOverlay.style.height = uploadedImage.clientHeight + 'px';
-          document.getElementById('controls').style.display = 'block';
-          // Clear any previous markers/outputs
-          markerOverlay.innerHTML = '';
-          outputList.innerHTML = '';
-        };
-      };
-      reader.readAsDataURL(file);
-    });
+      <div class="sidebar-footer">
+        <a href="https://github.com/Razee4315" target="_blank" title="GitHub">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22">
+            </path>
+          </svg>
+          Razee4315
+        </a>
+        <a href="https://www.linkedin.com/in/saqlainrazee" target="_blank" title="LinkedIn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+            <rect x="2" y="9" width="4" height="12"></rect>
+            <circle cx="4" cy="4" r="2"></circle>
+          </svg>
+          saqlainrazee
+        </a>
+        <a href="mailto:saqlainrazee@gmail.com" title="Email">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          saqlainrazee@gmail.com
+        </a>
+      </div>
+    </aside>
+  </main>
 
-    // Create a marker element at given display coordinates
-    function createMarker(x, y) {
-      const marker = document.createElement('div');
-      marker.classList.add('marker');
-      marker.style.left = x + 'px';
-      marker.style.top = y + 'px';
-      markerOverlay.appendChild(marker);
-    }
+  <div id="toast">Copied to clipboard!</div>
 
-    // Given natural coordinates, compute spherical coordinates
-    function calculateCoordinates(xNatural, yNatural) {
-      const yaw = (xNatural / uploadedImage.naturalWidth) * 360 - 180;
-      const pitch = 90 - (yNatural / uploadedImage.naturalHeight) * 180;
-      return { yaw, pitch };
-    }
-
-    // Handle clicks on the image container
-    imageContainer.addEventListener('click', function(event) {
-      // Get container bounds and calculate click position relative to container
-      const rect = imageContainer.getBoundingClientRect();
-      const xDisplay = event.clientX - rect.left;
-      const yDisplay = event.clientY - rect.top;
-
-      // Compute scale factors between displayed size and natural image dimensions
-      const scaleX = uploadedImage.naturalWidth / uploadedImage.clientWidth;
-      const scaleY = uploadedImage.naturalHeight / uploadedImage.clientHeight;
-
-      // Determine the corresponding coordinates in the natural (original) image
-      const xNatural = xDisplay * scaleX;
-      const yNatural = yDisplay * scaleY;
-
-      // Calculate spherical coordinates (yaw and pitch)
-      const { yaw, pitch } = calculateCoordinates(xNatural, yNatural);
-
-      // Place a marker at the clicked location on the displayed image
-      createMarker(xDisplay, yDisplay);
-
-      // Append the coordinate details to the output list
-      const li = document.createElement('li');
-      li.innerHTML = `yaw = ${yaw.toFixed(2)}°, pitch = ${pitch.toFixed(2)}°`;
-      outputList.appendChild(li);
-    });
-
-    // Clear markers and coordinate outputs when "Clear Markers" is clicked
-    clearMarkersBtn.addEventListener('click', function() {
-      markerOverlay.innerHTML = '';
-      outputList.innerHTML = '';
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
+
 </html>
